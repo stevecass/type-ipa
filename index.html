@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IPA Phonemic Typewriter</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600&family=Noto+Sans+Symbols+2&display=swap">
+  <style>
+    :root {
+      --bg:      #0f1117;
+      --card:    #1a1d27;
+      --border:  #2d3148;
+      --text:    #e8eaf0;
+      --muted:   #5a6080;
+      --accent:  #4a90d9;
+
+      --sv: #8a4f1a;   /* short vowels  — warm amber   */
+      --lv: #6b3a12;   /* long vowels   — dark amber   */
+      --dv: #7a5c10;   /* diphthongs    — gold-amber   */
+      --pl: #1a3d8a;   /* plosives      — blue         */
+      --fr: #0b5e50;   /* fricatives    — teal         */
+      --af: #4a1f8a;   /* affricates    — purple       */
+      --na: #144f2e;   /* nasals        — green        */
+      --ap: #0f4f60;   /* approximants  — cyan-blue    */
+      --ex: #2a3050;   /* markers       — slate        */
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Noto Sans', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      padding: 22px 16px 48px;
+    }
+
+    /* ── Header ─────────────────────────────────────────── */
+    header {
+      text-align: center;
+      margin-bottom: 22px;
+    }
+    h1 {
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    h1 em {
+      font-style: normal;
+      color: var(--text);
+      font-weight: 600;
+    }
+    .subtitle {
+      font-size: 0.62rem;
+      color: var(--muted);
+      margin-top: 4px;
+      letter-spacing: 0.08em;
+    }
+
+    /* ── Layout wrapper ─────────────────────────────────── */
+    .main {
+      max-width: 780px;
+      margin: 0 auto;
+    }
+
+    /* ── Output area ─────────────────────────────────────── */
+    .output-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 14px 10px;
+      margin-bottom: 16px;
+    }
+
+    #output {
+      width: 100%;
+      min-height: 64px;
+      max-height: 200px;
+      resize: vertical;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-family: 'Noto Sans', 'Lucida Sans Unicode', 'DejaVu Sans', 'Arial Unicode MS', sans-serif;
+      font-size: 1.55rem;
+      color: var(--text);
+      line-height: 1.55;
+      caret-color: var(--accent);
+    }
+
+    #output::placeholder {
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-family: 'Noto Sans', system-ui, sans-serif;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    button.ctrl {
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.76rem;
+      font-weight: 500;
+      font-family: inherit;
+      padding: 5px 14px;
+      transition: filter 0.12s;
+      letter-spacing: 0.02em;
+    }
+    button.ctrl:hover  { filter: brightness(1.25); }
+    button.ctrl:active { filter: brightness(0.82); }
+
+    .c-del   { background: #6b1d1d; color: #fca5a5; }
+    .c-space { background: #1a3474; color: #93c5fd; }
+    .c-clear { background: #2d3148; color: #9ca3af; }
+    .c-copy  { background: #123d24; color: #86efac; }
+
+    /* ── Tooltip toggle ──────────────────────────────────── */
+    .tip-toggle {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-left: auto;
+      cursor: pointer;
+      user-select: none;
+    }
+    .tip-toggle input { display: none; }
+
+    .tip-track {
+      width: 30px;
+      height: 17px;
+      border-radius: 9px;
+      background: var(--muted);
+      position: relative;
+      flex-shrink: 0;
+      transition: background 0.2s;
+    }
+    .tip-thumb {
+      position: absolute;
+      top: 2.5px;
+      left: 2.5px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #fff;
+      transition: transform 0.18s;
+    }
+    .tip-toggle input:checked + .tip-track { background: var(--accent); }
+    .tip-toggle input:checked + .tip-track .tip-thumb { transform: translateX(13px); }
+
+    .tip-label {
+      font-size: 0.68rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* suppress tooltips when toggle is off */
+    #keyboard.no-tips button.key:hover::after { opacity: 0; }
+
+    /* ── Legend ──────────────────────────────────────────── */
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 14px;
+      margin-bottom: 14px;
+    }
+    .leg {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.58rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #9ba3be;
+    }
+    .leg-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    /* ── Keyboard ─────────────────────────────────────────── */
+    .keyboard {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .section {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .sec-label {
+      font-size: 0.56rem;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding-left: 1px;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      align-items: center;
+    }
+
+    /* ── Keys ────────────────────────────────────────────── */
+    button.key {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 56px;
+      height: 50px;
+      border: none;
+      border-radius: 7px;
+      cursor: pointer;
+      padding: 3px 2px 4px;
+      color: rgba(255,255,255,0.93);
+      position: relative;
+      transition: filter 0.1s, transform 0.1s, box-shadow 0.1s;
+    }
+
+    button.key:hover {
+      filter: brightness(1.35);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 16px rgba(0,0,0,0.6);
+      z-index: 20;
+    }
+
+    button.key:active {
+      transform: translateY(0px);
+      filter: brightness(0.8);
+    }
+
+    .k-sym {
+      font-family: 'Noto Sans', 'Lucida Sans Unicode', 'DejaVu Sans', 'Arial Unicode MS', sans-serif;
+      font-size: 1.22rem;
+      line-height: 1;
+      font-weight: 400;
+    }
+
+    .k-hint {
+      font-size: 0.49rem;
+      opacity: 0.78;
+      white-space: nowrap;
+      overflow: hidden;
+      max-width: 52px;
+      text-overflow: ellipsis;
+      margin-top: 3px;
+      letter-spacing: 0.01em;
+      font-weight: 400;
+    }
+
+    /* Key colour classes */
+    .key.sv { background: var(--sv); }
+    .key.lv { background: var(--lv); }
+    .key.dv { background: var(--dv); }
+    .key.pl { background: var(--pl); }
+    .key.fr { background: var(--fr); }
+    .key.af { background: var(--af); }
+    .key.na { background: var(--na); }
+    .key.ap { background: var(--ap); }
+    .key.ex { background: var(--ex); }
+
+    /* Wide diphthong keys — rows 2 & 3 trailing trio */
+    .key.wide { width: 76px; }
+    .key.wide .k-hint { max-width: 72px; }
+
+    /* Row separator */
+    .sep {
+      width: 1px;
+      height: 34px;
+      background: var(--border);
+      margin: 0 3px;
+      flex-shrink: 0;
+    }
+
+    /* ── Tooltip ──────────────────────────────────────────── */
+    button.key::after {
+      content: attr(data-tip);
+      position: absolute;
+      bottom: calc(100% + 7px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #080b14;
+      color: #d0d8f0;
+      font-size: 0.67rem;
+      font-family: 'Noto Sans', system-ui, sans-serif;
+      font-weight: 400;
+      line-height: 1.4;
+      padding: 5px 10px;
+      border-radius: 6px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.16s;
+      z-index: 100;
+      border: 1px solid #2d3148;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.65);
+    }
+
+    button.key:hover::after { opacity: 1; }
+
+    /* ── Footer ──────────────────────────────────────────── */
+    footer {
+      text-align: center;
+      margin-top: 30px;
+      font-size: 0.6rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+    }
+
+    /* ── Responsive ──────────────────────────────────────── */
+    @media (max-width: 520px) {
+      button.key { width: 50px; height: 46px; }
+      button.key.wide { width: 68px; }
+      .k-sym { font-size: 1.1rem; }
+      #output { font-size: 1.3rem; }
+    }
+
+  </style>
+</head>
+<body>
+<div class="main">
+
+  <header>
+    <h1><em>IPA</em> Phonemic Typewriter</h1>
+    <p class="subtitle">British English · hover a key for details · type freely or click keys to insert</p>
+  </header>
+
+  <!-- Output -->
+  <div class="output-card">
+    <textarea id="output" spellcheck="false"
+      placeholder="Click the keys below to build a phonemic transcription…"></textarea>
+    <div class="btn-row">
+      <button class="ctrl c-del"   onclick="doDelete()">⌫ Delete</button>
+      <button class="ctrl c-space" onclick="ins(' ')">⎵ Space</button>
+      <button class="ctrl c-clear" onclick="doClear()">✕ Clear</button>
+      <button class="ctrl c-copy"  id="copy-btn" onclick="doCopy()">⧉ Copy</button>
+      <label class="tip-toggle" title="Show/hide key tooltips">
+        <input type="checkbox" id="tip-toggle" checked>
+        <span class="tip-track"><span class="tip-thumb"></span></span>
+        <span class="tip-label">Tips</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="leg"><div class="leg-dot" style="background:var(--sv)"></div>Short vowels</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--lv)"></div>Long vowels</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--dv)"></div>Diphthongs</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--pl)"></div>Plosives</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--fr)"></div>Fricatives</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--af)"></div>Affricates</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--na)"></div>Nasals</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--ap)"></div>Approximants</div>
+  </div>
+
+  <!-- Keyboard -->
+  <div class="keyboard" id="keyboard"></div>
+
+  <footer>
+    British English phonemic chart &nbsp;·&nbsp;
+    keywords from J.C. Wells' lexical sets &nbsp;·&nbsp;
+    symbols are Unicode — paste anywhere
+  </footer>
+
+</div><!-- .main -->
+
+<script>
+// ─── Layout ───────────────────────────────────────────────────────────────
+const ROWS = [
+  // Row 1: iː ɪ ʊ uː ɪə eɪ ˈ ˌ
+  [
+    { s:'iː', h:'fleece',  cls:'lv', tip:'Long ee — "bee", "see", "tea"' },
+    { s:'ɪ',  h:'kit',     cls:'sv', tip:'Short i — "fish", "ship", "it"' },
+    { s:'ʊ',  h:'foot',    cls:'sv', tip:'Short oo — "book", "put", "good"' },
+    { s:'uː', h:'goose',   cls:'lv', tip:'Long oo — "moon", "too", "food"' },
+    { s:'ɪə', h:'near',    cls:'dv', tip:'ɪ→ə centring — "ear", "here", "beer"' },
+    { s:'eɪ', h:'face',    cls:'dv', tip:'e→ɪ closing — "day", "cake", "eight"' },
+    { s:'ˈ',  h:'stress',  cls:'ex', tip:'Primary stress — before the stressed syllable: /ˈwɔːtə/' },
+    { s:'ˌ',  h:'2nd str', cls:'ex', tip:'Secondary stress — /ˌɪntəˈnæʃənəl/' },
+  ],
+  // Row 2: e ə ɜː ɔː ʊə ɔɪ əʊ  (last 3 wide)
+  [
+    { s:'e',  h:'dress',   cls:'sv', tip:'Short e — "bed", "red", "pen"' },
+    { s:'ə',  h:'schwa',   cls:'sv', tip:'Schwa — "about", "sofa", "butter"' },
+    { s:'ɜː', h:'nurse',   cls:'lv', tip:'Long er — "bird", "word", "her"' },
+    { s:'ɔː', h:'thought', cls:'lv', tip:'Long aw — "saw", "paw", "walk"' },
+    { s:'ʊə', h:'cure',    cls:'dv', tip:'ʊ→ə centring — "tour", "pure", "sure"',  wide: true },
+    { s:'ɔɪ', h:'choice',  cls:'dv', tip:'ɔ→ɪ closing — "boy", "coin", "toy"',    wide: true },
+    { s:'əʊ', h:'goat',    cls:'dv', tip:'ə→ʊ closing — "go", "home", "phone"',   wide: true },
+  ],
+  // Row 3: æ ʌ ɑː ɒ eə aɪ aʊ  (last 3 wide)
+  [
+    { s:'æ',  h:'trap',    cls:'sv', tip:'Short a — "cat", "hat", "man"' },
+    { s:'ʌ',  h:'strut',   cls:'sv', tip:'Short u — "cup", "up", "but"' },
+    { s:'ɑː', h:'start',   cls:'lv', tip:'Long ah — "car", "far", "bath"' },
+    { s:'ɒ',  h:'lot',     cls:'sv', tip:'Short o — "dog", "on", "hot"' },
+    { s:'eə', h:'square',  cls:'dv', tip:'e→ə centring — "air", "there", "care"',  wide: true },
+    { s:'aɪ', h:'price',   cls:'dv', tip:'a→ɪ closing — "fly", "time", "like"',   wide: true },
+    { s:'aʊ', h:'mouth',   cls:'dv', tip:'a→ʊ closing — "cow", "out", "now"',     wide: true },
+  ],
+  // Row 4: p b t d ʧ ʤ k g
+  [
+    { s:'p',  h:'pen',  cls:'pl', tip:'Voiceless bilabial plosive — "pen", "cap", "top"' },
+    { s:'b',  h:'bad',  cls:'pl', tip:'Voiced bilabial plosive — "bat", "cab", "rob"' },
+    { s:'t',  h:'ten',  cls:'pl', tip:'Voiceless alveolar plosive — "top", "bit", "cat"' },
+    { s:'d',  h:'dog',  cls:'pl', tip:'Voiced alveolar plosive — "dog", "bid", "red"' },
+    { s:'ʧ',  h:'chin', cls:'af', tip:'Voiceless affricate — "chin", "church", "match"' },
+    { s:'ʤ',  h:'gin',  cls:'af', tip:'Voiced affricate — "gin", "judge", "age"' },
+    { s:'k',  h:'cat',  cls:'pl', tip:'Voiceless velar plosive — "cat", "back", "kick"' },
+    { s:'g',  h:'get',  cls:'pl', tip:'Voiced velar plosive — "get", "big", "bag"' },
+  ],
+  // Row 5: f v θ ð s z ʃ ʒ
+  [
+    { s:'f',  h:'fan',    cls:'fr', tip:'Voiceless labiodental — "fan", "off", "leaf"' },
+    { s:'v',  h:'van',    cls:'fr', tip:'Voiced labiodental — "van", "love", "five"' },
+    { s:'θ',  h:'think',  cls:'fr', tip:'Voiceless dental — "think", "bath", "teeth"' },
+    { s:'ð',  h:'the',    cls:'fr', tip:'Voiced dental — "the", "this", "father"' },
+    { s:'s',  h:'sun',    cls:'fr', tip:'Voiceless alveolar — "sun", "this", "hiss"' },
+    { s:'z',  h:'zoo',    cls:'fr', tip:'Voiced alveolar — "zoo", "his", "fizz"' },
+    { s:'ʃ',  h:'shop',   cls:'fr', tip:'Voiceless palato-alveolar — "shop", "fish", "she"' },
+    { s:'ʒ',  h:'vision', cls:'fr', tip:'Voiced palato-alveolar — "vision", "measure", "beige"' },
+  ],
+  // Row 6: m n ŋ h l r w j
+  [
+    { s:'m',  h:'man',  cls:'na', tip:'Bilabial nasal — "man", "him", "some"' },
+    { s:'n',  h:'no',   cls:'na', tip:'Alveolar nasal — "no", "ten", "done"' },
+    { s:'ŋ',  h:'ring', cls:'na', tip:'Velar nasal — "ring", "sing", "think"' },
+    { s:'h',  h:'hat',  cls:'fr', tip:'Voiceless glottal — "hat", "who", "behind"' },
+    { s:'l',  h:'leg',  cls:'ap', tip:'Lateral approximant — "leg", "all", "fill"' },
+    { s:'r',  h:'red',  cls:'ap', tip:'Post-alveolar approximant — "red", "carry", "word"' },
+    { s:'w',  h:'wet',  cls:'ap', tip:'Labiovelar approximant — "wet", "we", "away"' },
+    { s:'j',  h:'yes',  cls:'ap', tip:'Palatal approximant — "yes", "you", "few"' },
+  ],
+];
+
+// ─── Render ───────────────────────────────────────────────────────────────
+function createKeyBtn(k) {
+  const btn = document.createElement('button');
+  btn.className = `key ${k.cls}${k.wide ? ' wide' : ''}`;
+  btn.setAttribute('data-tip', k.tip);
+  btn.innerHTML = `<span class="k-sym">${k.s}</span><span class="k-hint">${k.h}</span>`;
+  btn.addEventListener('click', () => ins(k.s));
+  return btn;
+}
+
+const keyboard = document.getElementById('keyboard');
+
+for (const rowDef of ROWS) {
+  const row = document.createElement('div');
+  row.className = 'row';
+  for (const k of rowDef) {
+    row.appendChild(createKeyBtn(k));
+  }
+  keyboard.appendChild(row);
+}
+
+// ─── Cursor tracking ──────────────────────────────────────────────────────
+const el = document.getElementById('output');
+let lastSel = { s: 0, e: 0 };
+
+function saveSel() {
+  lastSel = { s: el.selectionStart, e: el.selectionEnd };
+}
+
+['keyup', 'mouseup', 'touchend', 'select', 'blur'].forEach(ev =>
+  el.addEventListener(ev, saveSel)
+);
+
+// ─── Actions ──────────────────────────────────────────────────────────────
+function ins(ch) {
+  const { s, e } = lastSel;
+  el.value = el.value.slice(0, s) + ch + el.value.slice(e);
+  const newPos = s + ch.length;
+  el.focus();
+  el.setSelectionRange(newPos, newPos);
+  lastSel = { s: newPos, e: newPos };
+}
+
+function doDelete() {
+  const { s, e } = lastSel;
+  if (s !== e) {
+    el.value = el.value.slice(0, s) + el.value.slice(e);
+    el.focus();
+    el.setSelectionRange(s, s);
+    lastSel = { s, e: s };
+  } else if (s > 0) {
+    // Use Array.from to handle multi-codepoint Unicode safely
+    const before = Array.from(el.value.slice(0, s));
+    const newBefore = before.slice(0, -1).join('');
+    el.value = newBefore + el.value.slice(s);
+    el.focus();
+    el.setSelectionRange(newBefore.length, newBefore.length);
+    lastSel = { s: newBefore.length, e: newBefore.length };
+  } else {
+    el.focus();
+  }
+}
+
+function doClear() {
+  el.value = '';
+  lastSel = { s: 0, e: 0 };
+  el.focus();
+}
+
+function doCopy() {
+  if (!el.value) return;
+  navigator.clipboard.writeText(el.value).then(() => {
+    const btn = document.getElementById('copy-btn');
+    const orig = btn.textContent;
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => { btn.textContent = orig; }, 1600);
+  });
+}
+
+document.getElementById('tip-toggle').addEventListener('change', function () {
+  document.getElementById('keyboard').classList.toggle('no-tips', !this.checked);
+});
+</script>
+</body>
+</html>
