@@ -130,11 +130,17 @@
     .c-copy  { background: #123d24; color: #86efac; }
 
     /* ── Tooltip toggle ──────────────────────────────────── */
+    .toggle-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-left: auto;
+    }
+
     .tip-toggle {
       display: flex;
       align-items: center;
       gap: 7px;
-      margin-left: auto;
       cursor: pointer;
       user-select: none;
     }
@@ -171,6 +177,9 @@
 
     /* suppress tooltips when toggle is off */
     #keyboard.no-tips button.key:hover::after { opacity: 0; }
+
+    /* suppress key labels when toggle is off */
+    #keyboard.no-labels button.key .k-hint { display: none; }
 
     /* ── Legend ──────────────────────────────────────────── */
     .legend {
@@ -357,11 +366,18 @@
       <button class="ctrl c-space" onclick="ins(' ')">⎵ Space</button>
       <button class="ctrl c-clear" onclick="doClear()">✕ Clear</button>
       <button class="ctrl c-copy"  id="copy-btn" onclick="doCopy()">⧉ Copy</button>
-      <label class="tip-toggle" title="Show/hide key tooltips">
-        <input type="checkbox" id="tip-toggle" checked>
-        <span class="tip-track"><span class="tip-thumb"></span></span>
-        <span class="tip-label">Tips</span>
-      </label>
+      <div class="toggle-group">
+        <label class="tip-toggle" title="Show/hide key tooltips">
+          <input type="checkbox" id="tip-toggle" checked>
+          <span class="tip-track"><span class="tip-thumb"></span></span>
+          <span class="tip-label">Tips</span>
+        </label>
+        <label class="tip-toggle" title="Show/hide key labels">
+          <input type="checkbox" id="label-toggle" checked>
+          <span class="tip-track"><span class="tip-thumb"></span></span>
+          <span class="tip-label">Labels</span>
+        </label>
+      </div>
     </div>
   </div>
 
@@ -538,6 +554,10 @@ function doCopy() {
 
 document.getElementById('tip-toggle').addEventListener('change', function () {
   document.getElementById('keyboard').classList.toggle('no-tips', !this.checked);
+});
+
+document.getElementById('label-toggle').addEventListener('change', function () {
+  document.getElementById('keyboard').classList.toggle('no-labels', !this.checked);
 });
 </script>
 </body>
