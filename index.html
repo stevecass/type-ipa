@@ -25,6 +25,10 @@
       --na: #144f2e;   /* nasals        — green        */
       --ap: #0f4f60;   /* approximants  — cyan-blue    */
       --ex: #2a3050;   /* markers       — slate        */
+
+      /* 8 keys + 7×4px gaps + 2×16px body padding = 60px overhead */
+      --key-w: clamp(36px, calc((100vw - 60px) / 8), 56px);
+      --key-w-wide: calc(var(--key-w) * 76 / 56);
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -226,7 +230,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      width: 56px;
+      width: var(--key-w);
       height: 50px;
       border: none;
       border-radius: 7px;
@@ -261,7 +265,7 @@
       opacity: 0.78;
       white-space: nowrap;
       overflow: hidden;
-      max-width: 52px;
+      max-width: calc(var(--key-w) - 4px);
       text-overflow: ellipsis;
       margin-top: 3px;
       letter-spacing: 0.01em;
@@ -280,8 +284,8 @@
     .key.ex { background: var(--ex); }
 
     /* Wide diphthong keys — rows 2 & 3 trailing trio */
-    .key.wide { width: 76px; }
-    .key.wide .k-hint { max-width: 72px; }
+    .key.wide { width: var(--key-w-wide); }
+    .key.wide .k-hint { max-width: calc(var(--key-w-wide) - 4px); }
 
     /* Row separator */
     .sep {
@@ -329,8 +333,7 @@
 
     /* ── Responsive ──────────────────────────────────────── */
     @media (max-width: 520px) {
-      button.key { width: 50px; height: 46px; }
-      button.key.wide { width: 68px; }
+      button.key { height: 46px; }
       .k-sym { font-size: 1.1rem; }
       #output { font-size: 1.3rem; }
     }
