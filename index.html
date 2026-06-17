@@ -367,6 +367,7 @@
       <button class="ctrl c-space" onclick="ins(' ')">⎵ Space</button>
       <button class="ctrl c-clear" onclick="doClear()">✕ Clear</button>
       <button class="ctrl c-copy"  id="copy-btn" onclick="doCopy()">⧉ Copy</button>
+      <button class="ctrl c-copy"  id="copy-slash-btn" onclick="doCopySlashes()">⧉ Copy w //</button>
       <div class="toggle-group">
         <label class="tip-toggle" title="Show/hide key tooltips">
           <input type="checkbox" id="tip-toggle" checked>
@@ -547,6 +548,17 @@ function doCopy() {
   if (!el.value) return;
   navigator.clipboard.writeText(el.value).then(() => {
     const btn = document.getElementById('copy-btn');
+    const orig = btn.textContent;
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => { btn.textContent = orig; }, 1600);
+  });
+}
+
+function doCopySlashes() {
+  if (!el.value) return;
+  const slashed = `/${el.value}/`;
+  navigator.clipboard.writeText(slashed).then(() => {
+    const btn = document.getElementById('copy-slash-btn');
     const orig = btn.textContent;
     btn.textContent = '✓ Copied!';
     setTimeout(() => { btn.textContent = orig; }, 1600);
