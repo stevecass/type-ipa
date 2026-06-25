@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -242,7 +243,9 @@ function reset() {
   used = 0;
   isFlipped = false;
   card.classList.remove('flipped');
-  situationText.textContent = '';
+  while (situationText.firstChild) {
+    situationText.removeChild(situationText.firstChild);
+  }
   situationText.style.opacity = '1';
   nextBtn.disabled = false;
   nextBtn.textContent = 'Next card';
@@ -262,17 +265,25 @@ function showNextSituation() {
 
   if (!isFlipped) {
     // First card: do the flip
-    situationText.textContent = situation;
+    situationText.innerText = situation;
     isFlipped = true;
     card.classList.add('flipped');
   } else {
-    // Subsequent cards: fade out fully, replace content, fade back in
+    // Subsequent cards: fade out, fully clear DOM, then redraw
     situationText.style.opacity = '0';
     setTimeout(() => {
-      situationText.textContent = '';
-      situationText.textContent = situation;
-      situationText.style.opacity = '1';
-    }, 180);
+      // Remove all child nodes — more thorough than textContent on iOS Safari
+      while (situationText.firstChild) {
+        situationText.removeChild(situationText.firstChild);
+      }
+      // Wait for browser to process the clear before adding new text
+      requestAnimationFrame(() => {
+        situationText.innerText = situation;
+        requestAnimationFrame(() => {
+          situationText.style.opacity = '1';
+        });
+      });
+    }, 200);
   }
 
   updateCounter();
