@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -104,11 +105,7 @@
     font-weight: 700;
     color: #1B2D5A;
     line-height: 1.4;
-    transition: opacity 0.15s ease;
-  }
-
-  .card-back .situation-text.text-swap {
-    opacity: 0;
+    transition: opacity 0.18s ease;
   }
 
   .counter {
@@ -246,7 +243,7 @@ function reset() {
   isFlipped = false;
   card.classList.remove('flipped');
   situationText.textContent = '';
-  situationText.classList.remove('text-swap');
+  situationText.style.opacity = '1';
   nextBtn.disabled = false;
   nextBtn.textContent = 'Next card';
   doneMessage.style.display = 'none';
@@ -260,22 +257,22 @@ function updateCounter() {
 function showNextSituation() {
   if (remaining.length === 0) return;
 
+  const situation = remaining.pop();
+  used++;
+
   if (!isFlipped) {
     // First card: do the flip
-    const situation = remaining.pop();
-    used++;
     situationText.textContent = situation;
     isFlipped = true;
     card.classList.add('flipped');
   } else {
-    // Subsequent cards: swap text with a quick fade
-    const situation = remaining.pop();
-    used++;
-    situationText.classList.add('text-swap');
+    // Subsequent cards: fade out fully, replace content, fade back in
+    situationText.style.opacity = '0';
     setTimeout(() => {
+      situationText.textContent = '';
       situationText.textContent = situation;
-      situationText.classList.remove('text-swap');
-    }, 150);
+      situationText.style.opacity = '1';
+    }, 180);
   }
 
   updateCounter();
