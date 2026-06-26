@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -101,6 +102,20 @@
     border-left: 6px solid #EC6E1F;
   }
 
+  .card-back-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .card-back .prompt-text {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #94A3B8;
+    letter-spacing: 0.5px;
+  }
+
   .card-back .situation-text {
     font-size: 1.55rem;
     font-weight: 700;
@@ -184,7 +199,10 @@
       <div class="tap-text">Tap to flip</div>
     </div>
     <div class="card-face card-back">
-      <div class="situation-text" id="situationText"></div>
+      <div class="card-back-inner">
+        <div class="prompt-text">What will you do if...</div>
+        <div class="situation-text" id="situationText"></div>
+      </div>
     </div>
   </div>
 </div>
